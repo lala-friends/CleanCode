@@ -1,4 +1,4 @@
-package chp4;
+package main.java.chp4;
 
 import java.util.Arrays;
 

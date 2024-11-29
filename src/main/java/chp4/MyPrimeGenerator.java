@@ -1,4 +1,4 @@
-package chp4.refactoring;
+package main.java.chp4;
 
 import java.util.Arrays;
 
@@ -9,13 +9,13 @@ public class MyPrimeGenerator {
     public static int[] generatePrimes(int maxValue) {
         if (maxValue < 2) return new int[0];
 
-        boolean[] isPrimeWithInitialValue = initializeArray(maxValue);
+        boolean[] isPrime = initializeArray(maxValue);
 
-        boolean[] isPrimeWithCrossOutMultiples = crossOutMultiples(maxValue, isPrimeWithInitialValue);
+        boolean[] calculatedPrime = calculate(maxValue, isPrime);
 
-        int primeCount = getPrimeCount(isPrimeWithCrossOutMultiples);
+        int primeCount = getPrimeCount(calculatedPrime);
 
-        return getPrimes(primeCount, isPrimeWithCrossOutMultiples);
+        return getPrimes(primeCount, calculatedPrime);
     }
 
     private static int getPrimeCount(boolean[] calculatedPrime) {
@@ -36,7 +36,7 @@ public class MyPrimeGenerator {
         return primes;
     }
 
-    private static boolean[] crossOutMultiples(int maxValue, boolean[] isPrime) {
+    private static boolean[] calculate(int maxValue, boolean[] isPrime) {
         for (int index = 2; index < Math.sqrt(maxValue) + 1; index++) {
             if (!isPrime[index]) continue;
             for (int targetIndex = index * 2; targetIndex <= maxValue; targetIndex += index) {

@@ -1,6 +1,6 @@
-package chp10.after;
+package main.java.chp10.after;
 
-import chp10.Column;
+import main.java.chp10.Column;
 
 public class PreparedInsertSql extends Sql {
     public PreparedInsertSql(String table, Column[] columns) {

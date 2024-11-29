@@ -1,7 +1,7 @@
-package chp10.before;
+package main.java.chp10.before;
 
-import chp10.Column;
-import chp10.Criteria;
+import main.java.chp10.Column;
+import main.java.chp10.Criteria;
 
 import java.util.Objects;
 
