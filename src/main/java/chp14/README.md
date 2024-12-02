@@ -30,9 +30,11 @@ $ program -l true -p 8080 -d /usr/logs
 
 ### 점진적으로 개선하다
 * 테스트 슈트 작성 후 변경 시작
-
-### Boolean, String, Integer 인수를 ArgumentMarshaler 로 옮김
-### ArgumentMashaler 를 하위 클래스로 분리
+* 첫번째 리팩토링 완료
+  * Boolean, String, Integer 인수를 ArgumentMarshaler 로 옮김
+  * ArgumentMashaler 를 하위 클래스로 분리
+* 두번째 리팩토링
+  * setArgument() 에서 타입을 확인하는 코드 삭제 - G23 
 
 ## 결론
 * 나쁜 코드 보다 더 오랫동안 개발 프로젝트에 악영향을 끼치는 요인은 없음
