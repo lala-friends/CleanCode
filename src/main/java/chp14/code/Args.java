@@ -120,16 +120,12 @@ public class Args {
     private boolean setArgument(final char argChar) throws ArgsException {
         final var m = marshalers.get(argChar);
 
+        if (m == null) {
+            return false;
+        }
+
         try {
-            if (m instanceof BooleanArgumentMarshaler) {
-                setBooleanArg(m, currentArgument);
-            } else if (m instanceof StringArgumentMarshaler) {
-                setStringArg(m);
-            } else if (m instanceof IntegerArgumentMarshaler) {
-                setIntegerArg(m);
-            } else {
-                return false;
-            }
+            m.set(currentArgument);
         } catch (ArgsException e) {
             valid = false;
             errorArgumentId = argChar;
@@ -137,35 +133,6 @@ public class Args {
         }
 
         return true;
-    }
-
-    private void setBooleanArg(final ArgumentMarshaler m, Iterator<String> currentArgument) throws ArgsException {
-        m.set("true");
-    }
-
-    private void setStringArg(final ArgumentMarshaler m) throws ArgsException {
-        try {
-            m.set(currentArgument.next());
-        } catch (NoSuchElementException e) {
-            errorCode = ErrorCode.MISSING_STRING;
-            throw new ArgsException();
-        }
-    }
-
-    private void setIntegerArg(final ArgumentMarshaler m) throws ArgsException {
-        String parameter = null;
-
-        try {
-            parameter = currentArgument.next();
-            m.set(parameter);
-        } catch (NoSuchElementException e) {
-            errorCode = ErrorCode.MISSING_INTEGER;
-            throw new ArgsException();
-        } catch (ArgsException e) {
-            errorParameter = parameter;
-            errorCode = ErrorCode.INVALID_INTEGER;
-            throw e;
-        }
     }
 
     public int cardinality() {
@@ -252,5 +219,70 @@ public class Args {
 
         int port = arg.getInteger('p');
         System.out.println(port);
+    }
+
+    public interface ArgumentMarshaler {
+        void set(Iterator<String> currentArgument) throws ArgsException;
+
+        Object get();
+    }
+
+    public class BooleanArgumentMarshaler implements ArgumentMarshaler {
+        private Boolean booleanValue = false;
+
+        @Override
+        public void set(final Iterator<String> currentArgument) throws ArgsException {
+            booleanValue = true;
+        }
+
+        @Override
+        public Object get() {
+            return booleanValue;
+        }
+    }
+
+    public class StringArgumentMarshaler implements ArgumentMarshaler {
+        private String stringValue = "";
+
+        @Override
+        public void set(Iterator<String> currentArgument) throws ArgsException {
+            try {
+                stringValue = currentArgument.next();
+            } catch (NoSuchElementException e) {
+                errorCode = ErrorCode.MISSING_STRING;
+                throw new ArgsException();
+            }
+        }
+
+        @Override
+        public Object get() {
+            return stringValue;
+        }
+    }
+
+    public class IntegerArgumentMarshaler implements ArgumentMarshaler {
+        private Integer integerValue = 0;
+
+        @Override
+        public void set(Iterator<String> currentArgument) throws ArgsException {
+            String parameter = null;
+
+            try {
+                parameter = currentArgument.next();
+                integerValue = Integer.parseInt(parameter);
+            } catch (NoSuchElementException e) {
+                errorCode = ErrorCode.MISSING_INTEGER;
+                throw new ArgsException();
+            } catch (NumberFormatException e) {
+                errorParameter = parameter;
+                errorCode = ErrorCode.INVALID_INTEGER;
+                throw new ArgsException();
+            }
+        }
+
+        @Override
+        public Object get() {
+            return integerValue;
+        }
     }
 }
