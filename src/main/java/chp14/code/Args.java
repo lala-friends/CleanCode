@@ -11,7 +11,7 @@ public class Args {
 
     private Map<Character, ArgumentMarshaler> booleanArgs = new HashMap<>();
     private Map<Character, ArgumentMarshaler> stringArgs = new HashMap<>();
-    private Map<Character, Integer> intArgs = new HashMap<>();
+    private Map<Character, ArgumentMarshaler> intArgs = new HashMap<>();
 
     private boolean valid = true;
     private Set<Character> unexpectedArguments = new TreeSet<>();
@@ -86,7 +86,7 @@ public class Args {
     }
 
     private void parseIntegerSchemaElement(final char elementId) {
-        intArgs.put(elementId, 0);
+        intArgs.put(elementId, new ArgumentMarshaler());
     }
 
     private boolean isIntegerSchemaElement(String elementTail) {
@@ -165,7 +165,7 @@ public class Args {
         currentArgument++;
 
         try {
-            intArgs.put(argChar, Integer.parseInt(args[currentArgument]));
+            intArgs.get(argChar).setInteger(Integer.parseInt(args[currentArgument]));
         } catch (ArrayIndexOutOfBoundsException e) {
             valid = false;
             errorArgument = argChar;
@@ -192,11 +192,8 @@ public class Args {
     }
 
     private Integer getInteger(final char argChar) {
-        return falseIfNull(intArgs.get(argChar));
-    }
-
-    private Integer falseIfNull(final Integer i) {
-        return i == null ? 0 : i;
+        final var am = intArgs.get(argChar);
+        return am == null ? 0 : am.getInteger();
     }
 
     public static void main(String[] args) throws ParseException {

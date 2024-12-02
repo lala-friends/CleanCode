@@ -3,6 +3,7 @@ package main.java.chp14.code;
 public class ArgumentMarshaler {
     private boolean booleanValue = false;
     private String stringValue = "";
+    private Integer integerValue = 0;
 
     public boolean getBoolean() {
         return booleanValue;
@@ -18,6 +19,14 @@ public class ArgumentMarshaler {
 
     public void setString(final String stringValue) {
         this.stringValue = stringValue;
+    }
+
+    public Integer getInteger() {
+        return integerValue;
+    }
+
+    public void setInteger(final Integer integerValue) {
+        this.integerValue = integerValue;
     }
 
     private class BooleanArgumentMarshaler extends ArgumentMarshaler {}
