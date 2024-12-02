@@ -10,7 +10,7 @@ public class Args {
     private boolean vaild;
 
     private Map<Character, ArgumentMarshaler> booleanArgs = new HashMap<>();
-    private Map<Character, String> stringArgs = new HashMap<>();
+    private Map<Character, ArgumentMarshaler> stringArgs = new HashMap<>();
     private Map<Character, Integer> intArgs = new HashMap<>();
 
     private boolean valid = true;
@@ -78,7 +78,7 @@ public class Args {
     }
 
     private void parseStringSchemaElement(final char elementId) {
-        stringArgs.put(elementId, "");
+        stringArgs.put(elementId, new ArgumentMarshaler());
     }
 
     private boolean isStringSchemaElement(final String elementTail) {
@@ -149,7 +149,7 @@ public class Args {
         currentArgument++;
 
         try {
-            stringArgs.put(argChar, args[currentArgument]);
+            stringArgs.get(argChar).setString(args[currentArgument]);
         } catch (ArrayIndexOutOfBoundsException e) {
             valid = false;
             errorArgument = argChar;
@@ -187,11 +187,8 @@ public class Args {
     }
 
     public String getString(final char argChar) {
-        return falseIfNull(stringArgs.get(argChar));
-    }
-
-    private String falseIfNull(final String s) {
-        return s == null ? "" : s;
+        final var am = stringArgs.get(argChar);
+        return am == null ? "" : am.getString() ;
     }
 
     private Integer getInteger(final char argChar) {
