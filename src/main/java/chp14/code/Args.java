@@ -22,7 +22,7 @@ public class Args {
     private List<String> argsList;
 
     enum ErrorCode {
-        OK, MISSING_STRING, MISSING_INTEGER, INVALID_INTEGER, UNEXPECTED_ARGUMENT
+        OK, MISSING_STRING, MISSING_INTEGER, INVALID_INTEGER, MISSING_DOUBLE, INVALID_DOUBLE, UNEXPECTED_ARGUMENT
     }
 
     public Args(final String schema, final String[] args) throws ParseException, ArgsException {
@@ -57,12 +57,14 @@ public class Args {
 
         validateSchemaElementId(elementId);
 
-        if (isBooleanSchemaElement(elementTail)) {
+        if (elementTail.isEmpty()) {
             marshalers.put(elementId, new BooleanArgumentMarshaler());
-        } else if (isStringSchemaElement(elementTail)) {
+        } else if (elementTail.equals("*")) {
             marshalers.put(elementId, new StringArgumentMarshaler());
-        } else if (isIntegerSchemaElement(elementTail)) {
+        } else if (elementTail.equals("#")) {
             marshalers.put(elementId, new IntegerArgumentMarshaler());
+        } else if (elementTail.equals("##")) {
+            marshalers.put(elementId, new DoubleArgumentMarshaler());
         } else {
             throw new ParseException(String.format("Argument: %c has invalid format: %s.", elementId, elementTail), 0);
         }
@@ -72,18 +74,6 @@ public class Args {
         if (!Character.isLetter(elementId)) {
             throw new ParseException("Bad character: " + elementId + " in Args format: " + schema, 0);
         }
-    }
-
-    private boolean isBooleanSchemaElement(final String elementTail) {
-        return elementTail.isEmpty();
-    }
-
-    private boolean isStringSchemaElement(final String elementTail) {
-        return elementTail.equals("*");
-    }
-
-    private boolean isIntegerSchemaElement(String elementTail) {
-        return elementTail.equals("#");
     }
 
     private boolean parseArguments() throws ArgsException {
@@ -155,6 +145,9 @@ public class Args {
             case INVALID_INTEGER ->
                     String.format("Argument -%c expects an integer but was '$s'.", errorArgumentId, errorParameter);
             case MISSING_INTEGER -> String.format("Could not find integer parameter for -%c.", errorArgumentId);
+            case INVALID_DOUBLE ->
+                    String.format("Argument -%c expects an double but was '$s'.", errorArgumentId, errorParameter);
+            case MISSING_DOUBLE -> String.format("Could not find double parameter for -%c.", errorArgumentId);
         };
 
     }
@@ -201,6 +194,16 @@ public class Args {
         }
     }
 
+    private Double getDouble(final char argChar) {
+        final var am = marshalers.get(argChar);
+
+        try {
+            return am == null ? 0d : (Double) am.get();
+        } catch (ClassCastException _) {
+            return 0d;
+        }
+    }
+
     public boolean has(char arg) {
         return argsFound.contains(arg);
     }
@@ -210,7 +213,7 @@ public class Args {
     }
 
     public static void main(String[] args) throws ParseException, ArgsException {
-        final var arg = new Args("l,p#,d*", args);
+        final var arg = new Args("l,p#,d*,a##", args);
         boolean logging = arg.getBoolean('l');
         System.out.println(logging);
 
@@ -219,6 +222,9 @@ public class Args {
 
         int port = arg.getInteger('p');
         System.out.println(port);
+
+        double percent = arg.getDouble('a');
+        System.out.println(percent);
     }
 
     public interface ArgumentMarshaler {
@@ -283,6 +289,32 @@ public class Args {
         @Override
         public Object get() {
             return integerValue;
+        }
+    }
+
+    public class DoubleArgumentMarshaler implements ArgumentMarshaler {
+        private Double doubleValue = 0d;
+
+        @Override
+        public void set(Iterator<String> currentArgument) throws ArgsException {
+            String parameter = null;
+
+            try {
+                parameter = currentArgument.next();
+                doubleValue = Double.parseDouble(parameter);
+            } catch (NoSuchElementException e) {
+                errorCode = ErrorCode.MISSING_DOUBLE;
+                throw new ArgsException();
+            } catch (NumberFormatException e) {
+                errorParameter = parameter;
+                errorCode = ErrorCode.INVALID_DOUBLE;
+                throw new ArgsException();
+            }
+        }
+
+        @Override
+        public Object get() {
+            return doubleValue;
         }
     }
 }
