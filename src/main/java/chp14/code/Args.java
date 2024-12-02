@@ -1,16 +1,15 @@
 package main.java.chp14.code;
 
+import main.java.chp14.code.ArgsException.ErrorCode;
+
 import java.text.ParseException;
 import java.util.*;
 
 public class Args {
     private String schema;
 
-    private boolean valid = true;
-
     private Map<Character, ArgumentMarshaler> marshalers = new HashMap<>();
 
-    private Set<Character> unexpectedArguments = new TreeSet<>();
     private Set<Character> argsFound = new HashSet<>();
 
     private Iterator<String> currentArgument;
@@ -21,37 +20,26 @@ public class Args {
 
     private List<String> argsList;
 
-    enum ErrorCode {
-        OK, MISSING_STRING, MISSING_INTEGER, INVALID_INTEGER, MISSING_DOUBLE, INVALID_DOUBLE, UNEXPECTED_ARGUMENT
-    }
-
-    public Args(final String schema, final String[] args) throws ParseException, ArgsException {
+    public Args(final String schema, final String[] args) throws ArgsException {
         this.argsList = Arrays.asList(args);
         this.schema = schema;
-        this.valid = parse();
+        parse();
     }
 
-    private boolean parse() throws ParseException, ArgsException {
-        if (schema.isEmpty() && argsList.isEmpty()) {
-            return true;
-        }
-
+    private void parse() throws ArgsException {
         parseSchema();
         parseArguments();
-
-        return valid;
     }
 
-    private boolean parseSchema() throws ParseException {
+    private boolean parseSchema() throws ArgsException {
         for (String element : schema.split(",")) {
-            final var trimmedElement = element.trim();
-            parseSchemaElement(trimmedElement);
+            parseSchemaElement(element.trim());
         }
 
         return true;
     }
 
-    private void parseSchemaElement(final String element) throws ParseException {
+    private void parseSchemaElement(final String element) throws ArgsException {
         final var elementId = element.charAt(0);
         final var elementTail = element.substring(1);
 
@@ -66,13 +54,13 @@ public class Args {
         } else if (elementTail.equals("##")) {
             marshalers.put(elementId, new DoubleArgumentMarshaler());
         } else {
-            throw new ParseException(String.format("Argument: %c has invalid format: %s.", elementId, elementTail), 0);
+            throw new ArgsException(ErrorCode.INVALID_FORMAT, elementId, elementTail);
         }
     }
 
-    private void validateSchemaElementId(final char elementId) throws ParseException {
+    private void validateSchemaElementId(final char elementId) throws ArgsException {
         if (!Character.isLetter(elementId)) {
-            throw new ParseException("Bad character: " + elementId + " in Args format: " + schema, 0);
+            throw new ArgsException(ErrorCode.INVALID_ARGUMENT_NAME, elementId, null);
         }
     }
 
@@ -101,9 +89,7 @@ public class Args {
         if (setArgument(argChar)) {
             argsFound.add(argChar);
         } else {
-            unexpectedArguments.add(argChar);
             errorCode = ErrorCode.UNEXPECTED_ARGUMENT;
-            valid = false;
         }
     }
 
@@ -117,49 +103,11 @@ public class Args {
         try {
             m.set(currentArgument);
         } catch (ArgsException e) {
-            valid = false;
             errorArgumentId = argChar;
             throw e;
         }
 
         return true;
-    }
-
-    public int cardinality() {
-        return argsFound.size();
-    }
-
-    public String usage() {
-        if (!schema.isEmpty()) {
-            return "-[" + schema + "]";
-        } else {
-            return "";
-        }
-    }
-
-    public String errorMessage() throws Exception {
-        return switch (errorCode) {
-            case OK -> throw new Exception("TILT: Should not get here.");
-            case UNEXPECTED_ARGUMENT -> unexpectedArgumentMessage();
-            case MISSING_STRING -> String.format("Could not find string parameter for -%c.", errorArgumentId);
-            case INVALID_INTEGER ->
-                    String.format("Argument -%c expects an integer but was '$s'.", errorArgumentId, errorParameter);
-            case MISSING_INTEGER -> String.format("Could not find integer parameter for -%c.", errorArgumentId);
-            case INVALID_DOUBLE ->
-                    String.format("Argument -%c expects an double but was '$s'.", errorArgumentId, errorParameter);
-            case MISSING_DOUBLE -> String.format("Could not find double parameter for -%c.", errorArgumentId);
-        };
-
-    }
-
-    private String unexpectedArgumentMessage() {
-        final var message = new StringBuilder("Argument(s) -");
-
-        for (char c : unexpectedArguments) {
-            message.append(c);
-        }
-
-        return message.toString();
     }
 
     public boolean getBoolean(final char argChar) {
@@ -206,10 +154,6 @@ public class Args {
 
     public boolean has(char arg) {
         return argsFound.contains(arg);
-    }
-
-    public boolean isValid() {
-        return valid;
     }
 
     public static void main(String[] args) throws ParseException, ArgsException {

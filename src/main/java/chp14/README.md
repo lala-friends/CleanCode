@@ -34,7 +34,9 @@ $ program -l true -p 8080 -d /usr/logs
   * Boolean, String, Integer 인수를 ArgumentMarshaler 로 옮김
   * ArgumentMashaler 를 하위 클래스로 분리
 * 두번째 리팩토링
-  * setArgument() 에서 타입을 확인하는 코드 삭제 - G23 
+  * setArgument() 에서 타입을 확인하는 코드 삭제 - G23
+  * Double 인수 추가
+  * ArgsException 클래스 분리
 
 ## 결론
 * 나쁜 코드 보다 더 오랫동안 개발 프로젝트에 악영향을 끼치는 요인은 없음
