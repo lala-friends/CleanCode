@@ -11,6 +11,7 @@ public class Args {
 
     private Map<Character, Boolean> booleanArgs = new HashMap<>();
     private Map<Character, String> stringArgs = new HashMap<>();
+    private Map<Character, Integer> intArgs = new HashMap<>();
 
     private boolean valid = true;
     private Set<Character> unexpectedArguments = new TreeSet<>();
@@ -22,7 +23,7 @@ public class Args {
     private ErrorCode errorCode = ErrorCode.OK;
 
     enum ErrorCode {
-        OK, MISSING_STRING
+        OK, MISSING_INTEGER, INVALID_INTEGER, MISSING_STRING
     }
 
     public Args(final String schema, final String[] args) throws ParseException {
@@ -57,6 +58,8 @@ public class Args {
             parseBooleanSchemaElement(elementId);
         } else if (isStringSchemaElement(elementTail)) {
             parseStringSchemaElement(elementId);
+        } else if(isIntegerSchemaElement(elementTail)) {
+            parseIntegerSchemaElement(elementId);
         }
     }
 
@@ -82,6 +85,14 @@ public class Args {
         return elementTail.equals("*");
     }
 
+    private void parseIntegerSchemaElement(final char elementId) {
+        intArgs.put(elementId, 0);
+    }
+
+    private boolean isIntegerSchemaElement(String elementTail) {
+        return elementTail.equals("#");
+    }
+
     private boolean parseArguments() {
         for (currentArgument = 0; currentArgument < args.length; currentArgument++) {
             final var arg = args[currentArgument];
@@ -104,11 +115,6 @@ public class Args {
     }
 
     private void parseElement(final char argChar) {
-//        if (isBoolean(argChar)) {
-//            numberOfArguments++;
-//            setBooleanArg(argChar, true);
-//        }
-
         if (setArgument(argChar)) {
             argsFound.add(argChar);
         } else {
@@ -123,7 +129,9 @@ public class Args {
             setBooleanArg(argChar, true);
         } else if (isString(argChar)) {
             setStringArg(argChar, "");
-        } else {
+        } else if(isInteger(argChar)) {
+            setIntegerArg(argChar, 0);
+        }else {
             set = false;
         }
         return set;
@@ -149,8 +157,28 @@ public class Args {
         }
     }
 
-    private boolean isString(char argChar) {
+    private boolean isString(final char argChar) {
         return stringArgs.containsKey(argChar);
+    }
+
+    private void setIntegerArg(char argChar, int i) {
+        currentArgument++;
+
+        try {
+            intArgs.put(argChar, Integer.parseInt(args[currentArgument]));
+        } catch (ArrayIndexOutOfBoundsException e) {
+            valid = false;
+            errorArgument = argChar;
+            errorCode = ErrorCode.MISSING_INTEGER;
+        } catch (NumberFormatException e) {
+            valid = false;
+            errorArgument = argChar;
+            errorCode = ErrorCode.INVALID_INTEGER;
+        }
+    }
+
+    private boolean isInteger(final char argChar) {
+        return intArgs.containsKey(argChar);
     }
 
     public boolean getBoolean(final char arg) {
@@ -169,6 +197,14 @@ public class Args {
         return s == null ? "" : s;
     }
 
+    private Integer getInteger(final char argChar) {
+        return falseIfNull(intArgs.get(argChar));
+    }
+
+    private Integer falseIfNull(final Integer i) {
+        return i == null ? 0 : i;
+    }
+
     public static void main(String[] args) throws ParseException {
         final var arg = new Args("l,p#,d*", args);
         boolean logging = arg.getBoolean('l');
@@ -177,6 +213,9 @@ public class Args {
         String directory = arg.getString('d');
         System.out.println(directory);
 
-        System.out.println(Arrays.toString(args));
+        int port = arg.getInteger('p');
+        System.out.println(port);
+
+//        System.out.println(Arrays.toString(args));
     }
 }
