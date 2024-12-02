@@ -9,7 +9,7 @@ public class Args {
 
     private boolean vaild;
 
-    private Map<Character, Boolean> booleanArgs = new HashMap<>();
+    private Map<Character, ArgumentMarshaler> booleanArgs = new HashMap<>();
     private Map<Character, String> stringArgs = new HashMap<>();
     private Map<Character, Integer> intArgs = new HashMap<>();
 
@@ -70,7 +70,7 @@ public class Args {
     }
 
     private void parseBooleanSchemaElement(final char elementId) {
-        booleanArgs.put(elementId, false);
+        booleanArgs.put(elementId, new ArgumentMarshaler());
     }
 
     private boolean isBooleanSchemaElement(final String elementTail) {
@@ -138,7 +138,7 @@ public class Args {
     }
 
     private void setBooleanArg(char argChar, boolean value) {
-        booleanArgs.put(argChar, value);
+        booleanArgs.get(argChar).setBoolean(value);
     }
 
     private boolean isBoolean(final char argChar) {
@@ -181,12 +181,9 @@ public class Args {
         return intArgs.containsKey(argChar);
     }
 
-    public boolean getBoolean(final char arg) {
-        return falseIfNull(booleanArgs.get(arg));
-    }
-
-    private boolean falseIfNull(final Boolean b) {
-        return b != null && b;
+    public boolean getBoolean(final char argChar) {
+        final var am = booleanArgs.get(argChar);
+        return am != null && am.getBoolean();
     }
 
     public String getString(final char argChar) {
