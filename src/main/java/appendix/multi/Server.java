@@ -24,7 +24,12 @@ public class Server implements Runnable {
                 System.out.println("get client");
                 process(socket);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                if (!keepProcessing) {
+                    System.out.println("Server stopped gracefully.");
+                    break; // 정상 종료
+                } else {
+                    throw new RuntimeException(e); // 예외 처리
+                }
             }
         }
     }
