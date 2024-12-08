@@ -9,10 +9,17 @@ public class ClientRequestProcessor {
         this.socket = socket;
     }
 
-    public void process() throws IOException, InterruptedException {
-        final var message = MessageUtils.getMessage(socket);
-        Thread.sleep(1000);
-        MessageUtils.sendMessage(socket, "Processed: " + message);
+    public void process() {
+        try {
+            final var message = MessageUtils.getMessage(socket);
+            Thread.sleep(1000);
+            MessageUtils.sendMessage(socket, "Processed: " + message);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
 
     }
 }
